@@ -1,0 +1,14 @@
+{
+    "name": "items-load-generation",
+    "version": "1.0.0",
+    "description": "Module to generate items using Artillery",
+    "main": "items-payload-generator.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "AWS",
+    "license": "ISC",
+    "dependencies": {
+      "uuid": "^10.0.0"
+    }
+  }
