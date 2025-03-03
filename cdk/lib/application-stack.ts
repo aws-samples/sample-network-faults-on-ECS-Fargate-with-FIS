@@ -9,7 +9,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { FargateTaskDefinitionFaultInjection, FaultInjectionActionType } from './fargate-task-definition-fault-injection';
+import { FargateTaskDefinitionFaultInjection, FaultInjectionActionType } from 'cdk-ecs-fargate-task-fis';
 
 export class ApplicationStack extends cdk.Stack {
   public readonly vpc: ec2.Vpc;
