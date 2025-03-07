@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { CloudWatch } from '@aws-sdk/client-cloudwatch';
 import { Connection, RowDataPacket, createConnection } from 'mysql2/promise';
 import { MONITORING_CONSTANTS } from './shared-app-const';
@@ -27,6 +27,12 @@ const dbConfig: DbConfig = {
   user: process.env.DATABASE_USER || 'root',
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'demo'
+};
+
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 };
 
 // Database initialization
@@ -84,128 +90,90 @@ interface Item extends RowDataPacket {
 }
 
 // GET all items
-app.get('/api/items', async (req: Request, res: Response) => {
-  try {
-    const connection: Connection = await createConnection(dbConfig);
-    const startTime = Date.now();
-    const [rows] = await connection.execute<Item[]>('SELECT * FROM items');
-    await connection.end();
-    const endTime = Date.now();
-    const latency = endTime - startTime;
-    await sendMetricToCloudWatch('SELECT', latency);
-    res.json(rows);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
-  }
-});
+app.get('/api/items', asyncHandler(async (req: Request, res: Response) => {
+  const connection: Connection = await createConnection(dbConfig);
+  const startTime = Date.now();
+  const [rows] = await connection.execute<Item[]>('SELECT * FROM items');
+  await connection.end();
+  const endTime = Date.now();
+  const latency = endTime - startTime;
+  await sendMetricToCloudWatch('SELECT', latency);
+  res.json(rows);
+}));
 
 // POST new item
-app.post('/api/items', async (req: Request, res: Response) => {
-  try {
-    const { name, description, category, price } = req.body;
+app.post('/api/items', asyncHandler(async (req: Request, res: Response) => {
+  const { name, description, category, price } = req.body;
 
-    // Basic validation
-    if (!name || !price) {
-      return res.status(400).json({ error: 'Name and price are required' });
-    }
-
-    const connection: Connection = await createConnection(dbConfig);
-    
-    const startTime = Date.now();
-
-    const [result] = await connection.execute(
-      'INSERT INTO items (name, description, category, price) VALUES (?, ?, ?, ?)',
-      [name, description, category, price]
-    );
-    
-    await connection.end();
-    
-    const endTime = Date.now();
-    const latency = endTime - startTime;
-    await sendMetricToCloudWatch('INSERT', latency);
-
-    res.status(201).json({
-      message: 'Item created successfully',
-      id: (result as any).insertId
-    });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
+  if (!name || !price) {
+    return res.status(400).json({ error: 'Name and price are required' });
   }
-});
+
+  const connection: Connection = await createConnection(dbConfig);
+  const startTime = Date.now();
+  const [result] = await connection.execute(
+    'INSERT INTO items (name, description, category, price) VALUES (?, ?, ?, ?)',
+    [name, description, category, price]
+  );
+  await connection.end();
+  
+  const endTime = Date.now();
+  const latency = endTime - startTime;
+  await sendMetricToCloudWatch('INSERT', latency);
+
+  res.status(201).json({
+    message: 'Item created successfully',
+    id: (result as any).insertId
+  });
+}));
 
 // DELETE item
-app.delete('/api/items/:id', async (req: Request, res: Response) => {
-  try {
-    const connection: Connection = await createConnection(dbConfig);
-    const startTime = Date.now();
+app.delete('/api/items/:id', asyncHandler(async (req: Request, res: Response) => {
+  const connection: Connection = await createConnection(dbConfig);
+  const startTime = Date.now();
+  const [result] = await connection.execute(
+    'DELETE FROM items WHERE id = ?',
+    [req.params.id]
+  );
+  await connection.end();
 
-    const [result] = await connection.execute(
-      'DELETE FROM items WHERE id = ?',
-      [req.params.id]
-    );
-    await connection.end();
+  const endTime = Date.now();
+  const latency = endTime - startTime;
+  await sendMetricToCloudWatch('DELETE', latency);
 
-    const endTime = Date.now();
-    const latency = endTime - startTime;
-    await sendMetricToCloudWatch('DELETE', latency);
-
-    if ((result as any).affectedRows === 0) {
-      res.status(404).json({ error: 'Item not found' });
-    } else {
-      res.json({ message: 'Item deleted successfully' });
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
+  if ((result as any).affectedRows === 0) {
+    res.status(404).json({ error: 'Item not found' });
+  } else {
+    res.json({ message: 'Item deleted successfully' });
   }
-});
+}));
 
 // Update item
-app.put('/api/items/:id', async (req: Request, res: Response) => {
-  try {
-    const { name, description, category, price } = req.body;
-    
-    if (!name || !price) {
-      return res.status(400).json({ error: 'Name and price are required' });
-    }
-
-    const connection: Connection = await createConnection(dbConfig);
-    const startTime = Date.now();
-    const [result] = await connection.execute(
-      'UPDATE items SET name = ?, description = ?, category = ?, price = ? WHERE id = ?',
-      [name, description, category, price, req.params.id]
-    );
-    await connection.end();
-
-    const endTime = Date.now();
-    const latency = endTime - startTime;
-    await sendMetricToCloudWatch('UPDATE', latency);
-
-    if ((result as any).affectedRows === 0) {
-      res.status(404).json({ error: 'Item not found' });
-    } else {
-      res.json({ message: 'Item updated successfully' });
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
+app.put('/api/items/:id', asyncHandler(async (req: Request, res: Response) => {
+  const { name, description, category, price } = req.body;
+  
+  if (!name || !price) {
+    return res.status(400).json({ error: 'Name and price are required' });
   }
-});
 
+  const connection: Connection = await createConnection(dbConfig);
+  const startTime = Date.now();
+  const [result] = await connection.execute(
+    'UPDATE items SET name = ?, description = ?, category = ?, price = ? WHERE id = ?',
+    [name, description, category, price, req.params.id]
+  );
+  await connection.end();
+
+  const endTime = Date.now();
+  const latency = endTime - startTime;
+  await sendMetricToCloudWatch('UPDATE', latency);
+
+  if ((result as any).affectedRows === 0) {
+    res.status(404).json({ error: 'Item not found' });
+  } else {
+    res.json({ message: 'Item updated successfully' });
+  }
+}));
 // Call initialization before starting the server
 app.listen(port, async () => {
   try {
