@@ -32,7 +32,7 @@ export class ApplicationStack extends cdk.Stack {
     // Create ECS Cluster
     this.cluster = new ecs.Cluster(this, 'NetworkFaultsDemoCluster', {
       vpc: this.vpc,
-      containerInsights: true
+      containerInsightsV2: ecs.ContainerInsights.ENHANCED 
     });
 
     // Create database credentials in Secrets Manager
