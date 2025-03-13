@@ -12,8 +12,8 @@ config:
   plugins:
     publish-metrics:
       - type: cloudwatch
-        region: us-west-2
-        namespace: artillery-ecs-farget-network-actions-load
+        region: "{{ $env.AWS_REGION }}"
+        namespace: artillery-ecs-fargate-network-actions-load
         dimensions:
           - name: Service
             value: items-svc

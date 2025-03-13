@@ -1,6 +1,6 @@
 # Network Faults Demo Application on Amazon Elastic Container Service (ECS) Fargate with AWS Fault Injection Service (FIS)
 
-This project demonstrates network fault action experiements using AWS FIS for an application running on [Amazon ECS with AWS Fargate](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-ecs-network-fault-injection-experiments-fargate/). The demo application is a three-tier application deployed on Amazon ECS with AWS Fargate, with API Gateway as the front end and RDS MySQL for data persistence.
+This project demonstrates network fault action experiments using AWS FIS for an application running on [Amazon ECS with AWS Fargate](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-ecs-network-fault-injection-experiments-fargate/). The demo application is a three-tier application deployed on Amazon ECS with AWS Fargate, with API Gateway as the front end and RDS MySQL for data persistence.
 
 ## Repository Structure
 
@@ -76,7 +76,11 @@ This will deploy three stacks:
 2. Get the API end point from the `NetworkFaultsDemoStack` stack output after deployment.
 Set this as an environment variable.
 ```
-export API_URL='<end point from the installtion output>'
+# Export the AWS_REGION
+export AWS_REGION=$(aws configure get region)
+
+# Export the API Gateway endpoint
+export API_URL='<end point from the CloudFormation output>'
 ```
 3. Run the load test
 ```
