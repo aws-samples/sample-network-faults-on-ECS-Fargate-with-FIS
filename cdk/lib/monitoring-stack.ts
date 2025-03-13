@@ -18,7 +18,7 @@ export class MonitoringStack extends cdk.Stack {
     const dashboard = new cloudwatch.Dashboard(this, 'FISExperimentDashboard', {
       dashboardName: 'FIS-Network-Experiments-Dashboard'
     });
-    const artilleryNameSpace = 'artillery-ecs-farget-network-actions-load'
+    const artilleryNameSpace = 'artillery-ecs-fargate-network-actions-load'
     const artilleryService = 'items-svc'
 
     const apiLatencyWidget = new cloudwatch.GraphWidget({
@@ -86,35 +86,35 @@ export class MonitoringStack extends cdk.Stack {
       metricName: 'http.response_time.min',
       statistic: 'Maximum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpResponseMaxMetric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpResponseMaxMetric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'http.response_time.max',
       statistic: 'Maximum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpResponseP99Metric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpResponseP99Metric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'http.response_time.p99',
       statistic: 'Maximum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpResponseMedianMetric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpResponseMedianMetric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'http.response_time.median',
       statistic: 'Maximum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpResponseWidget =  new cloudwatch.GraphWidget({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpResponseWidget = new cloudwatch.GraphWidget({
       title: `Artillery Recorded Latency`,
       left: [artilleryHttpResponseMinMetric, artilleryHttpResponseMaxMetric, artilleryHttpResponseP99Metric, artilleryHttpResponseMedianMetric],
       width: 12
-  });
-    
+    });
+
     dashboard.addWidgets(
       apiLatencyWidget,
       artilleryHttpResponseWidget
@@ -126,81 +126,81 @@ export class MonitoringStack extends cdk.Stack {
       metricName: 'http.codes.400',
       statistic: 'Sum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpErrors500Metric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpErrors500Metric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'http.codes.500',
       statistic: 'Sum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpErrors502Metric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpErrors502Metric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'http.codes.502',
       statistic: 'Sum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpErrorsETIMEDOUTMetric = new cloudwatch.Metric({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpErrorsETIMEDOUTMetric = new cloudwatch.Metric({
       namespace: artilleryNameSpace,
       metricName: 'errors.ETIMEDOUT',
       statistic: 'Sum',
       period: cdk.Duration.minutes(1),
-      dimensionsMap: {Name: 'loadtest', Service: artilleryService}
-  });
-  const artilleryHttpErrorsWidget = new cloudwatch.GraphWidget({
+      dimensionsMap: { Name: 'loadtest', Service: artilleryService }
+    });
+    const artilleryHttpErrorsWidget = new cloudwatch.GraphWidget({
       title: `Artillery Recorded Errors`,
       left: [artilleryHttpErrors400Metric, artilleryHttpErrors500Metric, artilleryHttpErrors502Metric, artilleryHttpErrorsETIMEDOUTMetric],
       width: 12
-  });
+    });
 
-  dashboard.addWidgets(
-    apiErrorsWidget,
-    artilleryHttpErrorsWidget
-  );
+    dashboard.addWidgets(
+      apiErrorsWidget,
+      artilleryHttpErrorsWidget
+    );
 
-  // Create widget for database query latency
-  const dbLatencyWidget = new cloudwatch.GraphWidget({
-    title: 'Database Query Latency',
-    left: [
-      new cloudwatch.Metric({
-        namespace: MONITORING_CONSTANTS.NAMESPACE,
-        metricName: MONITORING_CONSTANTS.METRICS.DATABASE_QUERY_LATENCY,
-        dimensionsMap: {
-          [MONITORING_CONSTANTS.DIMENSIONS.SERVICE_NAME]: 
-            MONITORING_CONSTANTS.DIMENSIONS.SERVICE_VALUE,
-          [MONITORING_CONSTANTS.DIMENSIONS.QUERY_TYPE]: 'INSERT'
-        },
-        statistic: 'Average',
-        period: cdk.Duration.minutes(1)
-      }),
-      // Add p90 statistic
-      new cloudwatch.Metric({
-        namespace: MONITORING_CONSTANTS.NAMESPACE,
-        metricName: MONITORING_CONSTANTS.METRICS.DATABASE_QUERY_LATENCY,
-        dimensionsMap: {
-          [MONITORING_CONSTANTS.DIMENSIONS.SERVICE_NAME]: 
-            MONITORING_CONSTANTS.DIMENSIONS.SERVICE_VALUE,
-          [MONITORING_CONSTANTS.DIMENSIONS.QUERY_TYPE]: 'INSERT'
-        },
-        statistic: 'p90',
-        period: cdk.Duration.minutes(1)
-      })
-    ],
-    width: 12,
-    height: 8
-  });
+    // Create widget for database query latency
+    const dbLatencyWidget = new cloudwatch.GraphWidget({
+      title: 'Database Query Latency',
+      left: [
+        new cloudwatch.Metric({
+          namespace: MONITORING_CONSTANTS.NAMESPACE,
+          metricName: MONITORING_CONSTANTS.METRICS.DATABASE_QUERY_LATENCY,
+          dimensionsMap: {
+            [MONITORING_CONSTANTS.DIMENSIONS.SERVICE_NAME]:
+              MONITORING_CONSTANTS.DIMENSIONS.SERVICE_VALUE,
+            [MONITORING_CONSTANTS.DIMENSIONS.QUERY_TYPE]: 'INSERT'
+          },
+          statistic: 'Average',
+          period: cdk.Duration.minutes(1)
+        }),
+        // Add p90 statistic
+        new cloudwatch.Metric({
+          namespace: MONITORING_CONSTANTS.NAMESPACE,
+          metricName: MONITORING_CONSTANTS.METRICS.DATABASE_QUERY_LATENCY,
+          dimensionsMap: {
+            [MONITORING_CONSTANTS.DIMENSIONS.SERVICE_NAME]:
+              MONITORING_CONSTANTS.DIMENSIONS.SERVICE_VALUE,
+            [MONITORING_CONSTANTS.DIMENSIONS.QUERY_TYPE]: 'INSERT'
+          },
+          statistic: 'p90',
+          period: cdk.Duration.minutes(1)
+        })
+      ],
+      width: 12,
+      height: 8
+    });
 
-  // Add widgets to dashboard
-  dashboard.addWidgets(
-    dbLatencyWidget
-  );
+    // Add widgets to dashboard
+    dashboard.addWidgets(
+      dbLatencyWidget
+    );
 
     new cdk.CfnOutput(this, 'DashboardURL', {
-        description: 'URL for the CloudWatch Dashboard',
-        value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`
-      });
+      description: 'URL for the CloudWatch Dashboard',
+      value: `https://${this.region}.console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`
+    });
 
   }
 }
