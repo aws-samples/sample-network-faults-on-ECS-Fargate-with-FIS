@@ -20,7 +20,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.182.0",
+    "aws-cdk-lib": "^2.189.1",
     "cdk-ecs-fargate-task-fis": "^1.0.2",
     "cdk-nag": "^2.35.38",
     "constructs": "^10.0.0",
